@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>tracking.js - first tracking</title>
+    <script src="../build/tracking-min.js"></script>
+    <script src="../build/data/face.js"></script>
+    <script src="../build/data/eye.js"></script>
+    <!-- <script src="../build/data/mouth.js"></script> -->
+
+</head>
+
+<body>
+    <video id="myVideo" width="400" height="300" preload autoplay loop muted></video>
+    <canvas id="displayEye" width="400" height="300"></canvas>
+    <canvas id="displayFace" width="400" height="300"></canvas>
+
+    <script>
+        let video = document.getElementById('myVideo');
+        let canvasEye = document.getElementById("displayEye");
+        let ctxEye = canvasEye.getContext("2d")
+
+        let CamPos = {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        };
+
+        var eyeTracker = new tracking.ObjectTracker(["eye"]);
+        eyeTracker.on('track', function(event) {
+            if (event.data.length === 0) {
+                // No objects were detected in this frame.
+            } else {
+                ctxEye.drawImage(video, 0, 0, canvasEye.width, canvasEye.height);
+                //console.log("eye")
+                event.data.forEach(function(rect) {
+                    //console.log(rect)
+
+                    ctxEye.beginPath();
+                    ctxEye.rect(rect.x, rect.y, rect.width, rect.height);
+                    ctxEye.stroke();
+
+                    CamPos.x = rect.x + rect.width / 2;
+                    CamPos.y = rect.y + rect.height / 2;
+
+                    // rect.x, rect.y, rect.height, rect.width
+                });
+            }
+        });
+
+        tracking.track('#myVideo', eyeTracker);
+
+        let canvasFace = document.getElementById("displayFace");
+        let ctxFace = canvasFace.getContext("2d")
+
+        var FaceTracker = new tracking.ObjectTracker(["face"]);
+        FaceTracker.on('track', function(event) {
+            if (event.data.length === 0) {
+                // No objects were detected in this frame.
+            } else {
+                ctxFace.drawImage(video, 0, 0, canvasFace.width, canvasFace.height);
+                //console.log("face")
+                event.data.forEach(function(rect) {
+                    //console.log(rect)
+
+                    ctxFace.beginPath();
+                    ctxFace.rect(rect.x, rect.y, rect.width, rect.height);
+                    ctxFace.stroke();
+
+                    CamPos.z = 100000 / (rect.width * rect.height)
+
+                    // rect.x, rect.y, rect.height, rect.width
+                });
+            }
+        });
+
+        tracking.track('#myVideo', FaceTracker);
+
+
+        // Get access to the camera!
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            // Not adding `{ audio: true }` since we only want video now
+            navigator.mediaDevices.getUserMedia({
+                video: true
+            }).then(function(stream) {
+                //video.src = window.URL.createObjectURL(stream);
+                video.srcObject = stream;
+                video.play();
+            });
+        }
+
+
+        setInterval(() => {
+            console.log(CamPos)
+        }, 1000);
+    </script>
+</body>
+
+</html>
