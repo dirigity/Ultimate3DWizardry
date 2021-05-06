@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>perspe ¬,¬</title>
+
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+
+    <!-- <script src="../build/data/mouth.js"></script> -->
+
+</head>
+
+<body>
+    <video id="myVideo" width="400" height="300" preload autoplay loop muted style="display:none;"></video>
+
+    <!-- <script src="https://unpkg.com/@tensorflow/tfjs-core@2.1.0/dist/tf-core.js"></script>
+    <script src="https://unpkg.com/@tensorflow/tfjs-converter@2.1.0/dist/tf-converter.js"></script>
+    <script src="https://unpkg.com/@tensorflow/tfjs-backend-webgl@2.1.0/dist/tf-backend-webgl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script> -->
+
+    <script src="tf-core.js"></script>
+    <script src="tf-converter.js"></script>
+    <script src="tf-backend-webgj.js"></script>
+    <script src="faceMesh.js"></script>
+
+    <script src="GlslCanvas.js"></script>
+
+    <script>
+        let w = 400;
+        let h = 300;
+        let video = document.getElementById('myVideo');
+
+
+        let CamPos = {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        }; {
+
+            // Get access to the camera!
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Not adding `{ audio: true }` since we only want video now
+                navigator.mediaDevices.getUserMedia({
+                    video: true
+                }).then(function(stream) {
+                    //video.src = window.URL.createObjectURL(stream);
+                    video.srcObject = stream;
+                    video.play();
+                });
+            }
+
+            let k = 1.6;
+            (async function() {
+                console.log("loading model")
+                const model = await facemesh.load();
+                console.log("model loaded")
+                setInterval(async() => {
+                    try {
+                        const faces = await model.estimateFaces(video);
+                        if (faces[0]) {
+                            // faces.forEach(face => console.log(face.boundingBox));
+                            let bounds = faces[0].boundingBox;
+                            CamPos.x = (w / 2) - (bounds.topLeft[0] + bounds.bottomRight[0]) / (2 * k)
+                            CamPos.y = (h / 2) - (bounds.topLeft[1] + bounds.bottomRight[1]) / (2 * k)
+                            CamPos.z = 1 / Math.abs((bounds.topLeft[0] - bounds.bottomRight[0]) + (bounds.topLeft[1] - bounds.bottomRight[1]))
+                                //console.log(CamPos)
+                        }
+
+                    } catch (e) {}
+                }, 10);
+            })();
+        }
+    </script>
+</body>
+
+</html>

@@ -18,10 +18,15 @@
 <body>
     <video id="myVideo" width="400" height="300" preload autoplay loop muted style="display:none;"></video>
 
-    <script src="https://unpkg.com/@tensorflow/tfjs-core@2.1.0/dist/tf-core.js"></script>
+    <!-- <script src="https://unpkg.com/@tensorflow/tfjs-core@2.1.0/dist/tf-core.js"></script>
     <script src="https://unpkg.com/@tensorflow/tfjs-converter@2.1.0/dist/tf-converter.js"></script>
     <script src="https://unpkg.com/@tensorflow/tfjs-backend-webgl@2.1.0/dist/tf-backend-webgl.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script> -->
+
+    <script src="tf-core.js"></script>
+    <script src="tf-converter.js"></script>
+    <script src="tf-backend-webgj.js"></script>
+    <script src="faceMesh.js"></script>
 
     <script src="three.js"></script>
 
@@ -80,6 +85,7 @@
 
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
         const geometry = new THREE.BoxGeometry();
@@ -93,42 +99,66 @@
             side: THREE.DoubleSide,
         });
 
-        const light1 = new THREE.PointLight(0xffffff, 1, 100, 2);
-        light1.position.set(3, 4, 3);
-        scene.add(light1)
+        const light1_1 = new THREE.PointLight(0xffffff, 1, 100, 2);
+        light1_1.position.set(3, 4, 3);
 
-        const light2 = new THREE.PointLight(0xffffff, 1, 100, 2);
-        light2.position.set(-3, 4, 3);
-        scene.add(light2)
+        const light2_1 = new THREE.PointLight(0xffffff, 1, 100, 2);
+        light2_1.position.set(-3, 4, 3);
 
-        const light3 = new THREE.PointLight(0xffffff, 1, 100, 2);
-        light3.position.set(3, 4, -3);
-        scene.add(light3)
+        const light3_1 = new THREE.PointLight(0xffffff, 1, 100, 2);
+        light3_1.position.set(3, 4, -3);
 
-        const light4 = new THREE.PointLight(0xffffff, 1, 100, 2);
-        light4.position.set(-3, 4, -3);
-        scene.add(light4)
+        const light4_1 = new THREE.PointLight(0xffffff, 1, 100, 2);
+        light4_1.position.set(-3, 4, -3);
+
 
         const light1_2 = new THREE.PointLight(0xffffff, 0.1, 100, 2);
         light1_2.position.set(3, -4, 3);
-        scene.add(light1_2)
 
         const light2_2 = new THREE.PointLight(0xffffff, .1, 100, 2);
         light2_2.position.set(-3, -4, 3);
-        scene.add(light2_2)
 
         const light3_2 = new THREE.PointLight(0xffffff, .1, 100, 2);
         light3_2.position.set(3, -4, -3);
-        scene.add(light3_2)
 
         const light4_2 = new THREE.PointLight(0xffffff, .1, 100, 2);
         light4_2.position.set(-3, -4, -3);
+
+        light1_1.castShadow = true;
+        light2_1.castShadow = true;
+        light3_1.castShadow = true;
+        light4_1.castShadow = true;
+        light1_2.castShadow = true;
+        light2_2.castShadow = true;
+        light3_2.castShadow = true;
+        light4_2.castShadow = true;
+
+        scene.add(light1_1)
+        scene.add(light2_1)
+        scene.add(light3_1)
+        scene.add(light4_1)
+        scene.add(light1_2)
+        scene.add(light2_2)
+        scene.add(light3_2)
         scene.add(light4_2)
 
-        const cube = new THREE.Mesh(geometry, materialCube);
+
+
+        const sphereRadius = 0.2;
+        const sphereWidthDivisions = 5;
+        const sphereHeightDivisions = 5;
+        const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
+
+        const cube = new THREE.Mesh(sphereGeo, materialCube);
+
+        cube.position.z = -3
+        cube.castShadow = true;
+        cube.receiveShadow = true;
         scene.add(cube);
 
         const cube2 = new THREE.Mesh(geometry, materialWall);
+        //cube2.castShadow = true;
+        cube2.receiveShadow = true;
         cube2.scale.x = 10;
         cube2.scale.y = 10;
         cube2.scale.z = 10;
@@ -138,7 +168,6 @@
         camera.position.z = 5;
 
         function animate() {
-            requestAnimationFrame(animate);
             // cube.rotation.x += 0.0723;
             // cube.rotation.y += 0.02;
 
@@ -154,6 +183,8 @@
 
 
             renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+
         }
         animate()
     </script>
