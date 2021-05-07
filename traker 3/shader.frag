@@ -115,7 +115,7 @@ void main(){
     Scene[0]=Sphere;
     
     Obj Ground;
-    Ground.col=vec3(.7608,.549,.1529);
+    Ground.col=vec3(0.2667, 0.7333, 0.6314);
     Ground.distType=SphereCode;
     Ground.pos=vec3(0,-10000,0);
     Ground.size=9999.;
