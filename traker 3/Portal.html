@@ -6,8 +6,19 @@
     <title>perspe ¬,¬</title>
 
     <style>
-        body {
+        canvas {
+            width: 100%;
+            height: 100%;
             margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            padding: 0px;
+
         }
     </style>
 
@@ -35,46 +46,87 @@
         let h = 300;
         let video = document.getElementById('myVideo');
 
+        let keys = [];
+        window.onkeyup = function (e) { keys[e.keyCode] = false; }
+        window.onkeydown = function (e) { keys[e.keyCode] = true; }
 
         let CamPos = {
             "x": 0,
             "y": 0,
             "z": 0
-        }; {
+        };
+
+        { // faceTraking
+
+            let k = 1.6;            // glovalScaling
+            let apertureK = 1;      // fovOfWebCam
 
             // Get access to the camera!
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 // Not adding `{ audio: true }` since we only want video now
                 navigator.mediaDevices.getUserMedia({
                     video: true
-                }).then(function(stream) {
+                }).then(function (stream) {
                     //video.src = window.URL.createObjectURL(stream);
                     video.srcObject = stream;
                     video.play();
                 });
             }
 
-            let k = 1.6;
-            (async function() {
+
+            (async function () {
                 console.log("loading model")
                 const model = await facemesh.load();
                 console.log("model loaded")
-                setInterval(async() => {
+                setInterval(async () => {
                     try {
                         const faces = await model.estimateFaces(video);
                         if (faces[0]) {
                             // faces.forEach(face => console.log(face.boundingBox));
                             let bounds = faces[0].boundingBox;
-                            CamPos.x = (w / 2) - (bounds.topLeft[0] + bounds.bottomRight[0]) / (2 * k)
-                            CamPos.y = (h / 2) - (bounds.topLeft[1] + bounds.bottomRight[1]) / (2 * k)
-                            CamPos.z = 1 / Math.abs((bounds.topLeft[0] - bounds.bottomRight[0]) + (bounds.topLeft[1] - bounds.bottomRight[1]))
-                                //console.log(CamPos)
+                            CamPos.z = 100 / Math.abs((bounds.topLeft[0] - bounds.bottomRight[0]) + (bounds.topLeft[1] - bounds.bottomRight[1]))
+                            CamPos.x = CamPos.z * apertureK * ((w / 2) - (bounds.topLeft[0] + bounds.bottomRight[0]) / (2 * k))
+                            CamPos.y = CamPos.z * apertureK * ((h / 2) - (bounds.topLeft[1] + bounds.bottomRight[1]) / (2 * k))
+                            //console.log(CamPos)
                         }
 
-                    } catch (e) {}
+                    } catch (e) { }
                 }, 10);
             })();
         }
+
+
+        {// shader implementation
+
+            var canvas = document.createElement("canvas");
+
+
+            var sandbox = new GlslCanvas(canvas);
+
+            document.body.appendChild(canvas)
+            canvas.height = canvas.clientHeight
+            canvas.width = canvas.clientWidth
+
+            fetch("shader.frag").then((res) => {
+                //console.log(res)
+                res.text().then((string_frag_code) => {
+                    //  console.log(string_frag_code)
+                    sandbox.on('render', function () {
+                        //sandbox.setUniform("u_Wdepth", Wdepth);
+
+                        sandbox.setUniform("u_CamX", CamPos.x / 10);
+                        sandbox.setUniform("u_CamY", CamPos.y / 10);
+                        sandbox.setUniform("u_CamZ", CamPos.z / 10);
+                        console.log(CamPos)
+
+                    });
+                    sandbox.load(string_frag_code);
+
+                })
+            })
+        }
+
+
     </script>
 </body>
 
