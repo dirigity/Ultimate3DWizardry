@@ -16,11 +16,12 @@ uniform float u_CamZ;
 
 const float CEROMat=.001;
 const float CEROLight=.0001;
-const int N=2;
+const int N=4;
 const int M=1;
 const int SphereCode=0;
 const int CubeCode=1;
 
+const vec3 skyCol = vec3(0.1961, 0.549, 0.6863);
 struct Obj{
     vec3 col;
     int distType;
@@ -60,8 +61,10 @@ vec3 colOfVec(vec3 dir,vec3 point,Obj SceneObj[N],vec3 Lights[M]){
     float d=distanceToScene(SceneObj,point);
     int j=0;
     const int sky=100;
+    float AO = 1.;
     for(int i=0;i<sky;i++){
         if(d>CEROMat){
+            AO *= 0.95;
             point=point-((dir/length(dir))*(d-CEROLight));
             j++;
             d=distanceToScene(SceneObj,point);
@@ -78,12 +81,12 @@ vec3 colOfVec(vec3 dir,vec3 point,Obj SceneObj[N],vec3 Lights[M]){
     
     vec3 hit=point;
     vec3 norm=point-HitObj.pos;
-    norm = norm/length(norm);
+    norm=norm/length(norm);
     
     for(int m=0;m<M;m++){
         point=hit;
         dir=point-Lights[m];
-        dir = dir/length(dir);
+        dir=dir/length(dir);
         int j=0;
         d=min(distanceToScene(SceneObj,point),distanceToLight(Lights[m],point));
         for(int i=0;i<sky;i++){
@@ -94,12 +97,12 @@ vec3 colOfVec(vec3 dir,vec3 point,Obj SceneObj[N],vec3 Lights[M]){
             }
         }
         if(length(point-Lights[m])<CEROLight){
-            Iluminance+=abs(dot(dir,norm)/length(dir)) * 1./pow(length(hit-point),1.);
+            Iluminance+=abs(dot(dir,norm)/length(dir))*1./pow(length(hit-point),1.);
         }
     }
-    
-    //return vec3(j/10.);
-    return HitObj.col*Iluminance*10.;
+    AO = 1.- AO * AO * AO * AO;
+    vec3 ret = ((HitObj.col*Iluminance*10.) +skyCol) * AO;
+    return ret;
 }
 
 void main(){
@@ -107,19 +110,21 @@ void main(){
     st=st-.5;
     vec2 ScreenSpace=vec2(-st.x*16.,-st.y*9.);
     Obj Scene[N];
-    Obj Sphere;
-    Sphere.col=vec3(.7608,.549,.1529);
-    Sphere.distType=SphereCode;
-    Sphere.pos=vec3(0,0,13);
-    Sphere.size=1.;
-    Scene[0]=Sphere;
+    for(int i=0;i<N-1;i++){
+        Obj Sphere;
+        Sphere.col=vec3(.8118,.1569,.1569);
+        Sphere.distType=SphereCode;
+        Sphere.pos=vec3(-4+i*3,0,1+i);
+        Sphere.size=1.;
+        Scene[i]=Sphere;
+    }
     
     Obj Ground;
-    Ground.col=vec3(0.2667, 0.7333, 0.6314);
+    Ground.col=vec3(1.,1.,1.);
     Ground.distType=SphereCode;
-    Ground.pos=vec3(0,-10000,0);
-    Ground.size=9999.;
-    Scene[1]=Ground;
+    Ground.pos=vec3(0,-1000,0);
+    Ground.size=999.;
+    Scene[N-1]=Ground;
     
     vec3 lights[M];
     lights[0]=vec3(0,5,0);

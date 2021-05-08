@@ -53,13 +53,14 @@
         let CamPos = {
             "x": 0,
             "y": 0,
-            "z": 0
+            "z": 10
         };
 
         { // faceTraking
 
             let k = 1.6;            // glovalScaling
             let apertureK = 1;      // fovOfWebCam
+            let smothing = 0.4;
 
             // Get access to the camera!
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -78,20 +79,23 @@
                 console.log("loading model")
                 const model = await facemesh.load();
                 console.log("model loaded")
-                setInterval(async () => {
+                async function f(){
                     try {
                         const faces = await model.estimateFaces(video);
                         if (faces[0]) {
                             // faces.forEach(face => console.log(face.boundingBox));
                             let bounds = faces[0].boundingBox;
-                            CamPos.z = 100 / Math.abs((bounds.topLeft[0] - bounds.bottomRight[0]) + (bounds.topLeft[1] - bounds.bottomRight[1]))
-                            CamPos.x = CamPos.z * apertureK * ((w / 2) - (bounds.topLeft[0] + bounds.bottomRight[0]) / (2 * k))
-                            CamPos.y = CamPos.z * apertureK * ((h / 2) - (bounds.topLeft[1] + bounds.bottomRight[1]) / (2 * k))
+                            CamPos.z = smothing * CamPos.z + (1 - smothing) * 100 / Math.abs((bounds.topLeft[0] - bounds.bottomRight[0]) + (bounds.topLeft[1] - bounds.bottomRight[1]))
+                            CamPos.x = smothing * CamPos.x + (1 - smothing) * CamPos.z * apertureK * ((w / 2) - (bounds.topLeft[0] + bounds.bottomRight[0]) / (2 * k))
+                            CamPos.y = smothing * CamPos.y + (1 - smothing) * CamPos.z * apertureK * ((h / 2) - (bounds.topLeft[1] + bounds.bottomRight[1]) / (2 * k))
                             //console.log(CamPos)
                         }
 
+                
                     } catch (e) { }
-                }, 10);
+                    requestAnimationFrame(f);
+                }
+                f();
             })();
         }
 
@@ -114,9 +118,9 @@
                     sandbox.on('render', function () {
                         //sandbox.setUniform("u_Wdepth", Wdepth);
 
-                        sandbox.setUniform("u_CamX", CamPos.x / 10);
-                        sandbox.setUniform("u_CamY", CamPos.y / 10);
-                        sandbox.setUniform("u_CamZ", CamPos.z);
+                        sandbox.setUniform("u_CamX", CamPos.x / 30);
+                        sandbox.setUniform("u_CamY", CamPos.y / 30);
+                        sandbox.setUniform("u_CamZ", -CamPos.z * 9);
                         console.log(CamPos)
 
                     });
