@@ -95,7 +95,8 @@
                     } catch (e) { }
                     requestAnimationFrame(f);
                 }
-                f();
+                requestAnimationFrame(f);
+
             })();
         }
 
@@ -118,7 +119,7 @@
                     sandbox.on('render', function () {
                         //sandbox.setUniform("u_Wdepth", Wdepth);
 
-                        sandbox.setUniform("u_CamX", CamPos.x / 30);
+                        sandbox.setUniform("u_CamX", -CamPos.x / 30);
                         sandbox.setUniform("u_CamY", CamPos.y / 30);
                         sandbox.setUniform("u_CamZ", -CamPos.z * 9);
                         console.log(CamPos)

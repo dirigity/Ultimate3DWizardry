@@ -14,8 +14,8 @@ uniform float u_CamZ;
 // float u_CamY=0.;
 // float u_CamZ=-5.;
 
-const float CEROMat=.001;
-const float CEROLight=.0001;
+const float CEROMat=.002;
+const float CEROLight=.001;
 const int N=4;
 const int M=1;
 const int SphereCode=0;
@@ -64,7 +64,7 @@ vec3 colOfVec(vec3 dir,vec3 point,Obj SceneObj[N],vec3 Lights[M]){
     float AO = 1.;
     for(int i=0;i<sky;i++){
         if(d>CEROMat){
-            AO *= 0.95;
+            AO *= 0.99;
             point=point-((dir/length(dir))*(d-CEROLight));
             j++;
             d=distanceToScene(SceneObj,point);
@@ -72,7 +72,7 @@ vec3 colOfVec(vec3 dir,vec3 point,Obj SceneObj[N],vec3 Lights[M]){
     }
     
     if(j==sky){
-        return vec3(0.,0.,0.);
+        return skyCol;
     }
     
     // goToLight
@@ -100,15 +100,17 @@ vec3 colOfVec(vec3 dir,vec3 point,Obj SceneObj[N],vec3 Lights[M]){
             Iluminance+=abs(dot(dir,norm)/length(dir))*1./pow(length(hit-point),1.);
         }
     }
-    AO = 1.- AO * AO * AO * AO;
-    vec3 ret = ((HitObj.col*Iluminance*10.) +skyCol) * AO;
+    AO = 1.- (1.-AO)*(1.-AO)*(1.-AO)*(1.-AO);
+    vec3 ret = ((HitObj.col*Iluminance*10.) +skyCol*0.7) * AO;
     return ret;
 }
+
+const float realScreenSizeCoef = 0.5;
 
 void main(){
     vec2 st=gl_FragCoord.xy/u_resolution;
     st=st-.5;
-    vec2 ScreenSpace=vec2(-st.x*16.,-st.y*9.);
+    vec2 ScreenSpace=vec2(-st.x*16.*realScreenSizeCoef,-st.y*9.*realScreenSizeCoef);
     Obj Scene[N];
     for(int i=0;i<N-1;i++){
         Obj Sphere;
@@ -130,7 +132,7 @@ void main(){
     lights[0]=vec3(0,5,0);
     //st -= u_mouse/u_resolution;
     
-    vec3 col=colOfVec(vec3(ScreenSpace.x-u_CamX,ScreenSpace.y-u_CamY,u_CamZ),vec3(u_CamX,u_CamY,u_CamZ),Scene,lights);
+    vec3 col=colOfVec(vec3(ScreenSpace.x -u_CamX,ScreenSpace.y-u_CamY,u_CamZ),vec3(u_CamX,u_CamY,u_CamZ),Scene,lights);
     
     gl_FragColor=vec4(col,1.);
     //gl_FragColor=vec4(u_CamX, u_CamY, u_CamZ ,1.);
